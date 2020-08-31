@@ -39,10 +39,20 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { req, em }: MyContext) {
+    if (!req.session?.userId) {
+      return null;
+    }
+
+    const user = await em.findOne(User, { id: req.session.userId });
+    return user;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg('options') options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     if (options.username.length <= 2) {
       return {
@@ -77,13 +87,17 @@ export class UserResolver {
         };
       }
     }
+
+    // Store user id in cookie so that they're logged in immediately post-creation
+    req.session!.userId = user.id;
+
     return { user };
   }
 
   @Mutation(() => UserResponse)
   async login(
     @Arg('options') options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, { username: options.username });
     if (!user) {
@@ -93,10 +107,13 @@ export class UserResolver {
     }
 
     const isValid = await argon2.verify(user.password, options.password);
-    if (!isValid)
+    if (!isValid) {
       return {
         errors: [{ field: 'password', message: 'Incorrect password' }],
       };
+    }
+
+    req.session!.userId = user.id;
 
     return { user };
   }
