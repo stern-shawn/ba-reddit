@@ -129,4 +129,22 @@ export class UserResolver {
 
     return { user };
   }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req, res }: MyContext): Promise<Boolean> {
+    return new Promise((resolve) => {
+      // Destroy the redis session
+      req.session?.destroy((err) => {
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+
+        // If session in redis was destroyed successfully, also clear the user's cookie session
+        res.clearCookie('qid');
+        resolve(true);
+      });
+    });
+  }
 }
