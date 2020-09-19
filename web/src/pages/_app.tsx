@@ -35,13 +35,7 @@ const client = createClient({
               { query: MeDocument },
               _result,
               (result, query) => {
-                if (result.login.errors) {
-                  return query;
-                } else {
-                  return {
-                    me: result.login.user,
-                  };
-                }
+                return result.login.errors ? query : { me: result.login.user };
               }
             );
           },
@@ -51,13 +45,9 @@ const client = createClient({
               { query: MeDocument },
               _result,
               (result, query) => {
-                if (result.register.errors) {
-                  return query;
-                } else {
-                  return {
-                    me: result.register.user,
-                  };
-                }
+                return result.register.errors
+                  ? query
+                  : { me: result.register.user };
               }
             );
           },
