@@ -9,7 +9,6 @@ import {
   Ctx,
   ObjectType,
 } from 'type-graphql';
-import { EntityManager } from '@mikro-orm/postgresql';
 
 import { MyContext } from '../types';
 import { User } from '../entities/User';
@@ -75,29 +74,20 @@ export class UserResolver {
     const hashedPassword = await argon2.hash(options.password);
 
     try {
-      // Using the knex query builder to insert since em.persistAndFlush was choking on unique user generation...
-      const [user] = await (em as EntityManager)
-        .createQueryBuilder(User)
-        .getKnexQuery()
-        .insert({
-          username: options.username,
-          password: hashedPassword,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })
-        .returning('*');
+      const user = em.create(User, {
+        username: options.username,
+        password: hashedPassword,
+      });
+
+      await em.persistAndFlush(user);
 
       // Store user id in cookie so that they're logged in immediately post-creation
       req.session!.userId = user.id;
 
-      return {
-        user: {
-          ...user,
-          createdAt: user.created_at,
-          updatedAt: user.updated_at,
-        },
-      };
+      return { user };
     } catch (e) {
+      em.clear();
+
       if (e.code === '23505' || e.detail.includes('already exists')) {
         // Duplicate username
         return {
