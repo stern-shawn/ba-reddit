@@ -1,4 +1,5 @@
 import { ThemeProvider, CSSReset } from '@chakra-ui/core';
+import { devtoolsExchange } from '@urql/devtools';
 import { cacheExchange, Cache, QueryInput } from '@urql/exchange-graphcache';
 import { Provider, createClient, dedupExchange, fetchExchange } from 'urql';
 
@@ -25,6 +26,7 @@ const client = createClient({
     credentials: 'include',
   },
   exchanges: [
+    devtoolsExchange,
     dedupExchange,
     cacheExchange({
       updates: {
