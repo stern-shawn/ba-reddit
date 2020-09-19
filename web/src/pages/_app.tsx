@@ -36,8 +36,8 @@ const client = createClient({
               cache,
               { query: MeDocument },
               _result,
-              (result, query) => {
-                return result.login.errors ? query : { me: result.login.user };
+              ({ login }, query) => {
+                return login.errors ? query : { me: login.user };
               }
             );
           },
@@ -46,10 +46,8 @@ const client = createClient({
               cache,
               { query: MeDocument },
               _result,
-              (result, query) => {
-                return result.register.errors
-                  ? query
-                  : { me: result.register.user };
+              ({ register }, query) => {
+                return register.errors ? query : { me: register.user };
               }
             );
           },
