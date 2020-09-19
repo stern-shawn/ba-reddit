@@ -73,11 +73,10 @@ export class UserResolver {
     }
 
     const hashedPassword = await argon2.hash(options.password);
-    let user;
 
     try {
       // Using the knex query builder to insert since em.persistAndFlush was choking on unique user generation...
-      const result = await (em as EntityManager)
+      const [user] = await (em as EntityManager)
         .createQueryBuilder(User)
         .getKnexQuery()
         .insert({
@@ -88,7 +87,16 @@ export class UserResolver {
         })
         .returning('*');
 
-      user = result[0];
+      // Store user id in cookie so that they're logged in immediately post-creation
+      req.session!.userId = user.id;
+
+      return {
+        user: {
+          ...user,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at,
+        },
+      };
     } catch (e) {
       if (e.code === '23505' || e.detail.includes('already exists')) {
         // Duplicate username
@@ -96,12 +104,16 @@ export class UserResolver {
           errors: [{ field: 'username', message: 'username already taken' }],
         };
       }
+
+      return {
+        errors: [
+          {
+            field: 'username',
+            message: 'Something went horribly wrong, please try again',
+          },
+        ],
+      };
     }
-
-    // Store user id in cookie so that they're logged in immediately post-creation
-    req.session!.userId = user.id;
-
-    return { user };
   }
 
   @Mutation(() => UserResponse)
