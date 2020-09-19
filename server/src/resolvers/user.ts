@@ -12,6 +12,7 @@ import {
 
 import { MyContext } from '../types';
 import { User } from '../entities/User';
+import { COOKIE_NAME } from '../constants';
 
 @InputType()
 class UsernamePasswordInput {
@@ -142,7 +143,7 @@ export class UserResolver {
         }
 
         // If session in redis was destroyed successfully, also clear the user's cookie session
-        res.clearCookie('qid');
+        res.clearCookie(COOKIE_NAME);
         resolve(true);
       });
     });

@@ -12,7 +12,7 @@ import microConfig from './mikro-orm.config';
 import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
-import { isProd } from './constants';
+import { isProd, COOKIE_NAME } from './constants';
 import { MyContext } from './types';
 
 const main = async () => {
@@ -34,7 +34,7 @@ const main = async () => {
 
   app.use(
     session({
-      name: 'qid',
+      name: COOKIE_NAME,
       store: new RedisStore({ client: redisClient, disableTouch: true }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years, wow
