@@ -1,7 +1,6 @@
 import { devtoolsExchange } from '@urql/devtools';
 import { cacheExchange } from '@urql/exchange-graphcache';
 import { dedupExchange, fetchExchange } from 'urql';
-
 import {
   LoginMutation,
   LogoutMutation,
