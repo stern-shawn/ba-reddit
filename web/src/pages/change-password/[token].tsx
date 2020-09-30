@@ -1,4 +1,4 @@
-import { Box, Button, Link } from '@chakra-ui/core';
+import { Box, Button, Link, Flex } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
 import { NextPage } from 'next';
 import { withUrqlClient } from 'next-urql';
@@ -49,12 +49,14 @@ const ChangePassword: NextPage<ChangePasswordProps> = ({ token }) => {
               type="password"
             />
             {tokenError ? (
-              <Box>
-                <Box style={{ color: 'red' }}>{tokenError}</Box>
+              <Flex>
+                <Box mr={2} style={{ color: 'red' }}>
+                  {tokenError}
+                </Box>
                 <NextLink href="/forgot-password">
-                  <Link>Get a new forgot password token</Link>
+                  <Link>Click here to get a new token</Link>
                 </NextLink>
-              </Box>
+              </Flex>
             ) : null}
             <Button
               type="submit"
