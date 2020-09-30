@@ -8,12 +8,14 @@ import {
   Ctx,
   ObjectType,
 } from 'type-graphql';
+import { v4 as uuidv4 } from 'uuid';
 
 import { MyContext } from '../types';
 import { User } from '../entities/User';
-import { COOKIE_NAME } from '../constants';
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants';
 import { UsernamePasswordInput } from './UsernamePasswordInput';
 import { validateRegister } from '../utils/validateRegister';
+import { sendEmail } from '../utils/sendEmail';
 
 @ObjectType()
 class FieldError {
@@ -35,9 +37,31 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
   @Mutation(() => Boolean)
-  async forgotPassword(@Arg('email') email: string, @Ctx() { em }: MyContext) {
-    // TODO
-    // const user = await em.findOne(User, { email });
+  async forgotPassword(
+    @Arg('email') email: string,
+    @Ctx() { em, redis }: MyContext
+  ) {
+    const user = await em.findOne(User, { email });
+    if (!user) {
+      // Email not in the db, return true to avoid people knowing who is in the system for privacy etc
+      return true;
+    }
+
+    const token = uuidv4();
+
+    await redis.set(
+      `${FORGET_PASSWORD_PREFIX}${token}`,
+      user.id,
+      'ex',
+      1000 * 60 * 60 * 24 * 3
+    ); // 3 days to reset
+
+    await sendEmail(
+      email,
+      `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
+    );
+
+    return true;
   }
 
   @Query(() => User, { nullable: true })
